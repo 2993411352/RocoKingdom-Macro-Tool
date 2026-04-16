@@ -38,6 +38,9 @@ _KEY_MAP = {
 # Press[X]-[Y]-[0] 正则
 _PRESS_PATTERN = re.compile(r'^Press(\d+)-(\d+)-(\d+)$', re.IGNORECASE)
 
+# Hold[Key]:[Ms] 正则 (例如 HoldLClick:1000, HoldR:500)
+_HOLD_PATTERN = re.compile(r'^Hold([A-Za-z]+):(\d+)$', re.IGNORECASE)
+
 
 def parse(script_string: str) -> list[str]:
     """
@@ -76,15 +79,22 @@ def execute(cmd: str, stop_event: threading.Event) -> bool:
         return not stop_event.is_set()
 
     # ----------------------------------------------------------
-    # 2) 鼠标操作
+    # 2) 鼠标操作 (新旧全兼容)
     # ----------------------------------------------------------
     if cmd == 'LMouseDown':
         pydirectinput.mouseDown(button='left')
         _fuzzed_sleep(config.MOUSE_CLICK_DELAY)
         return True
-
     if cmd == 'LMouseUp':
         pydirectinput.mouseUp(button='left')
+        _fuzzed_sleep(config.MOUSE_CLICK_DELAY)
+        return True
+    if cmd in ('LClick', 'Click'):
+        pydirectinput.click(button='left')
+        _fuzzed_sleep(config.MOUSE_CLICK_DELAY)
+        return True
+    if cmd == 'RClick':
+        pydirectinput.click(button='right')
         _fuzzed_sleep(config.MOUSE_CLICK_DELAY)
         return True
 
@@ -92,63 +102,78 @@ def execute(cmd: str, stop_event: threading.Event) -> bool:
         pydirectinput.scroll(3)
         _fuzzed_sleep(config.MOUSE_CLICK_DELAY)
         return True
-
     if cmd == 'WheelDown':
         pydirectinput.scroll(-3)
         _fuzzed_sleep(config.MOUSE_CLICK_DELAY)
         return True
 
     # ----------------------------------------------------------
-    # 3) 字母键 Down / Up
+    # 2.5) Hold蓄力长按 (例如 HoldLClick:1000, HoldR:2000)
     # ----------------------------------------------------------
-    for letter, key_name in _KEY_MAP.items():
-        up_cmd = f'{letter.upper()}Up'
-        down_cmd = f'{letter.upper()}Down'
-        if cmd == down_cmd:
-            pydirectinput.keyDown(key_name)
-            _fuzzed_sleep(config.KEY_DOWN_UP_GAP)
-            return True
-        if cmd == up_cmd:
-            pydirectinput.keyUp(key_name)
-            _fuzzed_sleep(config.KEY_DOWN_UP_GAP)
-            return True
+    match_hold = _HOLD_PATTERN.match(cmd)
+    if match_hold:
+        key_name = match_hold.group(1).lower()
+        hold_time_sec = int(match_hold.group(2)) / 1000.0
+        
+        # 转换别名
+        if key_name == 'lclick' or key_name == 'left':
+            pydirectinput.mouseDown(button='left')
+            _interruptible_sleep(hold_time_sec, stop_event)
+            pydirectinput.mouseUp(button='left')
+        elif key_name == 'rclick' or key_name == 'right':
+            pydirectinput.mouseDown(button='right')
+            _interruptible_sleep(hold_time_sec, stop_event)
+            pydirectinput.mouseUp(button='right')
+        else:
+            # 当作普通键盘按键处理 (如果有映射则转译，如没映射则直传)
+            real_key = _KEY_MAP.get(key_name, key_name)
+            pydirectinput.keyDown(real_key)
+            _interruptible_sleep(hold_time_sec, stop_event)
+            pydirectinput.keyUp(real_key)
+        
+        _fuzzed_sleep(config.KEY_DOWN_UP_GAP)
+        return not stop_event.is_set()
 
     # ----------------------------------------------------------
-    # 4) Shift / Space Down / Up
+    # 3) 字母键与功能键的击键 (Tap) / Down / Up
     # ----------------------------------------------------------
-    if cmd == 'ShiftDown':
-        pydirectinput.keyDown('shift')
+    # 尝试分离命令末尾的 Down/Up
+    is_down = cmd.lower().endswith('down') and cmd.lower() != 'wheeldown'
+    is_up = cmd.lower().endswith('up') and cmd.lower() != 'wheelup'
+    
+    if is_down:
+        raw_key = cmd[:-4].lower()
+        real_key = _KEY_MAP.get(raw_key, raw_key)
+        pydirectinput.keyDown(real_key)
         _fuzzed_sleep(config.KEY_DOWN_UP_GAP)
         return True
-    if cmd == 'ShiftUp':
-        pydirectinput.keyUp('shift')
+    
+    if is_up:
+        raw_key = cmd[:-2].lower()
+        real_key = _KEY_MAP.get(raw_key, raw_key)
+        pydirectinput.keyUp(real_key)
         _fuzzed_sleep(config.KEY_DOWN_UP_GAP)
         return True
-    if cmd == 'SpaceDown':
-        pydirectinput.keyDown('space')
-        _fuzzed_sleep(config.KEY_DOWN_UP_GAP)
-        return True
-    if cmd == 'SpaceUp':
-        pydirectinput.keyUp('space')
-        _fuzzed_sleep(config.KEY_DOWN_UP_GAP)
+    
+    # 【新增极其方便的】自动敲击功能：如果是个原生键名(如 x, r, space, shift, tab, esc)
+    # 直接敲击它！不再需要手写 Down 和 Up！
+    lower_cmd = cmd.lower()
+    SUPPORTED_TAPS = set(_KEY_MAP.keys()).union({'space', 'shift', 'esc', 'escape', 'tab', 'enter'})
+    
+    if lower_cmd in SUPPORTED_TAPS or lower_cmd in _KEY_MAP.values():
+        # 如果是 esc, tab, 转回规范命名
+        if lower_cmd == 'esc': lower_cmd = 'escape'
+        
+        real_key = _KEY_MAP.get(lower_cmd, lower_cmd)
+        pydirectinput.keyDown(real_key)
+        _fuzzed_sleep(config.KEY_PRESS_DELAY)
+        pydirectinput.keyUp(real_key)
+        _fuzzed_sleep(config.KEY_PRESS_DELAY)
         return True
 
-    # ----------------------------------------------------------
-    # 5) Esc / Tab — press (按下再释放)
-    # ----------------------------------------------------------
-    if cmd == 'Esc':
-        pydirectinput.keyDown('escape')
-        _fuzzed_sleep(config.KEY_PRESS_DELAY)
-        pydirectinput.keyUp('escape')
-        _fuzzed_sleep(config.KEY_PRESS_DELAY)
-        return True
-
-    if cmd == 'Tab':
-        pydirectinput.keyDown('tab')
-        _fuzzed_sleep(config.KEY_PRESS_DELAY)
-        pydirectinput.keyUp('tab')
-        _fuzzed_sleep(config.KEY_PRESS_DELAY)
-        return True
+    # 这里原本还有一大堆硬编码的 Shift/Space/Tab/Esc 逻辑，
+    # 现在已经全部被被上面的 "3) 击键 (Tap) 自动敲击功能" 给通用拦截并完美处理了！
+    # 因此这部分硬编码可以光荣下岗。
 
     # ----------------------------------------------------------
     # 6) C1 ~ C6 — 精灵切换（数字键 1-6 + 微延迟）

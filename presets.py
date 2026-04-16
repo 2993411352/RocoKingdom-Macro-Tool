@@ -33,17 +33,17 @@ PRESETS = {
         "init_commands": (
             "500 IUp RUp LMouseUp "
             # 扔出 2~6 号精灵
-            "C2 800 LMouseDown 300 LMouseUp 1500 "
-            "C3 800 LMouseDown 300 LMouseUp 1500 "
-            "C4 800 LMouseDown 300 LMouseUp 1500 "
-            "C5 800 LMouseDown 300 LMouseUp 1500 "
-            "C6 800 LMouseDown 300 LMouseUp 1500 "
+            "C2 800 HoldLClick:300 1500 "
+            "C3 800 HoldLClick:300 1500 "
+            "C4 800 HoldLClick:300 1500 "
+            "C5 800 HoldLClick:300 1500 "
+            "C6 800 HoldLClick:300 1500 "
             # 骑乘 1 号精灵 (按 R)
-            "C1 800 RDown 200 RUp 1000 "
+            "C1 800 R 1000 "
         ),
         "loop_commands": (
             # 每 20 秒按一次 R 防掉线
-            "RDown 200 RUp 20000 "
+            "R 20000 "
         ),
     },
 
@@ -58,15 +58,15 @@ PRESETS = {
         "description": "扔出1~6号精灵后，持续循环: Tab→鞠躬→Esc",
         "init_commands": (
             "500 IUp RUp LMouseUp "
-            "C1  LMouseDown 1000 LMouseUp 200 "
-            "C2  LMouseDown 1000 LMouseUp 200 "
-            "C3  LMouseDown 1000 LMouseUp 200 "
-            "C4  LMouseDown 1000 LMouseUp 200 "
-            "C5  LMouseDown 1000 LMouseUp 200 "
-            "C6  LMouseDown 1000 LMouseUp 200 "
+            "C1 HoldLClick:1000 200 "
+            "C2 HoldLClick:1000 200 "
+            "C3 HoldLClick:1000 200 "
+            "C4 HoldLClick:1000 200 "
+            "C5 HoldLClick:1000 200 "
+            "C6 HoldLClick:1000 200 "
         ),
         "loop_commands": (
-            "2000 Tab 500 Bow 1500 Esc 300 SpaceDown 100 SpaceUp 8000 "
+            "2000 Tab 500 Bow 1500 Esc 300 Space 8000 "
         ),
     },
 
@@ -81,14 +81,14 @@ PRESETS = {
         "description": "扔出2~6号精灵，循环: Tab→鞠躬→Esc→跳跃→ RDown → RUp",
         "init_commands": (
             "500 IUp RUp LMouseUp "
-            "C2  LMouseDown 1000 LMouseUp 200 "
-            "C3  LMouseDown 1000 LMouseUp 200 "
-            "C4  LMouseDown 1000 LMouseUp 200 "
-            "C5  LMouseDown 1000 LMouseUp 200 "
-            "C6  LMouseDown 1000 LMouseUp 200 "
+            "C2 HoldLClick:1000 200 "
+            "C3 HoldLClick:1000 200 "
+            "C4 HoldLClick:1000 200 "
+            "C5 HoldLClick:1000 200 "
+            "C6 HoldLClick:1000 200 "
         ),
         "loop_commands": (
-            "2000 Tab 500 Bow 1500 Esc 500 SpaceDown 100 SpaceUp 500 C1 800 RDown 200 RUp 8000 XDown 200 XUp 500 "
+            "2000 Tab 500 Bow 1500 Esc 500 Space 500 C1 800 R 8000 X 500 "
         ),
     },
 }
