@@ -60,8 +60,23 @@ JELLY_MATCH_THRESHOLD = 0.50
 # 格式: (left%, top%, right%, bottom%)  相对于游戏窗口
 JELLY_ROI_PERCENT = (0.83, 0.9, 0.89, 0.98)
 
-# 模板图片路径
-TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+# 模板图片路径获取逻辑（适配 PyInstaller Exe 打包环境）
+import sys
+import os
+
+if getattr(sys, 'frozen', False):
+    # 如果被打包成了 exe，则基于 exe 所在的目录
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    # 正常 py 源码运行，由于 config.py 位于根目录，直接使用它的目录
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+
+# 如果模板文件夹不存在，自动创建一个空的
+if not os.path.exists(TEMPLATES_DIR):
+    os.makedirs(TEMPLATES_DIR)
+
 JELLY_TEMPLATE_PATH = os.path.join(TEMPLATES_DIR, 'jelly_template.png')
 
 # ============================================================

@@ -17,9 +17,9 @@ from enum import Enum
 import pydirectinput
 
 import config
-import command_parser
-import window_detector
-from vision_detector import VisionDetector
+from core import command_parser
+from core import window_detector
+from core.vision_detector import VisionDetector
 
 
 class MacroState(Enum):

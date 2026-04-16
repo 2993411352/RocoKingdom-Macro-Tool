@@ -21,7 +21,7 @@ import winsound
 import pydirectinput
 
 import config
-import window_detector
+from core import window_detector
 
 # 禁用 pydirectinput 内置的 pause（我们自己控制延迟）
 pydirectinput.PAUSE = 0.0

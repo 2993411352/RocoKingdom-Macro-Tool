@@ -18,7 +18,7 @@ import numpy as np
 from mss import mss
 
 import config
-import window_detector
+from core import window_detector
 
 
 class VisionDetector:

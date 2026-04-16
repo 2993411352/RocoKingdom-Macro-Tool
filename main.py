@@ -16,8 +16,9 @@ import keyboard
 
 import config
 from presets import PRESETS
-from macro_engine import MacroEngine
-from vision_detector import VisionDetector
+from core import window_detector
+from core.macro_engine import MacroEngine
+from core.vision_detector import VisionDetector
 
 
 # ============================================================

@@ -6,11 +6,17 @@
 可以通过这个数值精确调试 config.py 里的 JELLY_MATCH_THRESHOLD 阈值！
 """
 
+import os
+import sys
+
+# 把上级目录加入到系统路径中，以便能直接 import config 和 core
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import time
 import cv2
 import config
-from vision_detector import VisionDetector
-import window_detector
+from core.vision_detector import VisionDetector
+from core import window_detector
 
 def test_vision():
     # 强制在控制台也能输出颜色

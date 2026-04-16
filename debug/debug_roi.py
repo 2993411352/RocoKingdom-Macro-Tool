@@ -7,12 +7,17 @@ ROI 区域可视化工具
 """
 
 import os
+import sys
+
+# 把上级目录加入到系统路径中，以便能直接 import config 和 core
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import cv2
 import numpy as np
 from mss import mss
 
 import config
-import window_detector
+from core import window_detector
 
 def debug_roi():
     # 获取游戏窗口位置
